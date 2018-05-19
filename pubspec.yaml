@@ -3,6 +3,7 @@ description: Aion Monitor Application
 
 dependencies:
   path_provider: "^0.4.0"
+  bignum: any
   flutter:
     sdk: flutter
 

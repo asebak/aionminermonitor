@@ -1,5 +1,9 @@
 import 'dart:async';
+import 'package:aion_monitor/accountdetails.dart';
+import 'package:aion_monitor/aionutility.dart';
+import 'package:bignum/bignum.dart';
 
+import 'package:aion_monitor/aionapi.dart';
 import 'package:aion_monitor/storage.dart';
 import 'package:flutter/material.dart';
 
@@ -39,6 +43,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   List<String> _addresses;
+  Map<String, AccountDetails> _addressMap = {};
   Iterable<Widget> _listTiles = new List<Widget>();
 
   final GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
@@ -47,13 +52,25 @@ class _MyHomePageState extends State<MyHomePage> {
    _getAllAddress();
   }
 
+  _getAccountDetails(address) {
+    AionApi api = new AionApi(address);
+    api.getAccountDetails().then((dynamic val) {
+      if(val == null){
+        return;
+      }
+      setState(() {
+        _addressMap[address] = new AccountDetails.fromJson(val);
+        _refreshListView();
+      });
+    });
+  }
+
   Widget buildListTile(BuildContext context, String item) {
     if(item == ""){
       return MergeSemantics();
    }
     Widget secondary;
-    secondary = const Text('Balance: ');
-
+    secondary = Text('Balance: ' + (_addressMap[item] != null ? _addressMap[item].balance : ""));
     return new MergeSemantics(
       child: new ListTile(
         isThreeLine: true,
@@ -81,6 +98,9 @@ class _MyHomePageState extends State<MyHomePage> {
   _getAllAddress() {
     Storage storage = new Storage();
     storage.readAddress().then((List<String> addresses){
+      for (var value in addresses) {
+        _getAccountDetails(value);
+      }
       _addresses = addresses;
       setState(() {
         _refreshListView();
@@ -119,12 +139,7 @@ class _MyHomePageState extends State<MyHomePage> {
             children: <Widget>[
               new TextFormField(
                 validator:  (value){
-                  RegExp regExp = new RegExp(
-                    r"^0xa[a-f\d]{63}$",
-                    caseSensitive: false,
-                    multiLine: false,
-                  );
-                  bool isValidAccount = regExp.hasMatch(value);
+                  bool isValidAccount = AionUtility.isValidAddress(value);
                   if(!isValidAccount){
                     return "Not a valid Aion Account";
                   }
