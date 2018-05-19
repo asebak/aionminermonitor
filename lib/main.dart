@@ -41,6 +41,8 @@ class _MyHomePageState extends State<MyHomePage> {
   List<String> _addresses;
   Iterable<Widget> _listTiles = new List<Widget>();
 
+  final GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
+
   _MyHomePageState() {
    _getAllAddress();
   }
@@ -110,13 +112,33 @@ class _MyHomePageState extends State<MyHomePage> {
    _addNewAddress() {
     final myController = new TextEditingController();
     AlertDialog dialog = new AlertDialog(
-        content: new SingleChildScrollView(
+        content: new Form(
+          key: _formKey,
           child: new Column(
+            mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              new Text('Add Aion Wallet Address?',
-                style: new TextStyle(fontSize: 18.0),),
-              new TextField(
-              controller: myController),
+              new TextFormField(
+                validator:  (value){
+                  RegExp regExp = new RegExp(
+                    r"^0xa[a-f\d]{63}$",
+                    caseSensitive: false,
+                    multiLine: false,
+                  );
+                  bool isValidAccount = regExp.hasMatch(value);
+                  if(!isValidAccount){
+                    return "Not a valid Aion Account";
+                  }
+                  return null;
+                },
+                  autovalidate: true,
+              controller: myController,
+                  keyboardType: TextInputType.text,
+                  decoration: new InputDecoration(
+                      hintText: '0xa0',
+                      labelText: 'Aion Address'
+                  )
+              )
+
             ],
           ),
         ),
@@ -124,14 +146,18 @@ class _MyHomePageState extends State<MyHomePage> {
         actions: <Widget> [
           new FlatButton(onPressed: () => Navigator.pop(context), child: new Text('Cancel')),
           new FlatButton(onPressed: () {
-            var text = myController.text;
-            Storage storage = new Storage();
-            storage.writeAddress(text).then((void value) {
-              setState(() {
-                _addAddressToUI(text);
-                Navigator.pop(context);
-              });
-            });
+
+     if (this._formKey.currentState.validate()) {
+         var text = myController.text;
+         //if(!isValidAccount){
+         Storage storage = new Storage();
+         storage.writeAddress(text).then((void value) {
+           setState(() {
+             _addAddressToUI(text);
+             Navigator.pop(context);
+           });
+         });
+     }
           }, child: new Text('Add')),
         ]
     );
