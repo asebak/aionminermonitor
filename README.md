@@ -1,8 +1,3 @@
 # aion_monitor
 
-Aion Monitor Application
-
-## Getting Started
-
-For help getting started with Flutter, view our online
-[documentation](https://flutter.io/).
+Aion Monitor Application for Proof of Work block reward.
